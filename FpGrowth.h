@@ -28,6 +28,7 @@ TreeNode<T>::TreeNode(T value, int count, TreeNode<T>* parent) {
 	this->value = value;
 	this->count = count;
 	this->parent = parent;
+	this->link = NULL;
 }
 
 template<class T>
@@ -45,16 +46,16 @@ private:
 public:
 	FpGrowth(int minSuppCnt, const set<set<T>>& dataSet);
 	void freqSetsMining(vector<set<T>>& freqSetsList);
-	void FpGrowth<T>::rulesMining(const float& inMinConf, const vector<set<T>>& inFreqSets, 
+	void rulesMining(const float& inMinConf, const vector<set<T>>& inFreqSets, 
 			vector<vector<set<T>>>& outFreqSetsList, map<set<T>, float>& outSuppData, 
 			map<pair<set<T>, set<T>>, float>& outBigRulesList);
 private:
 	void _dataSet2Map(map<set<T>, int>& dataMap);
 	TreeNode<T>* _createTree(map<set<T>, int>& dataMap, map<T, pair<int, TreeNode<T>*>>& headerTable);
-	void _updateTree(const vector<T>& items, const int& itemsStartIndex, TreeNode<T>* &root, 
+	void _updateTree(const vector<T>& items, const int& itemsStartIndex, TreeNode<T>* root, 
 			map<T, pair<int, TreeNode<T>*> >& headerTable, const int& transCnt);
-	void _ascendTree(const TreeNode<T>* leafNode, vector<T>& prefixPath);
-	void _findPrefixPath(const T& basePattern, const TreeNode<T>* inTreeNode, map<set<T>, int>& outCondPattern);
+	void _ascendTree(TreeNode<T>* leafNode, vector<T>& prefixPath);
+	void _findPrefixPath(const T& basePattern, TreeNode<T>* inTreeNode, map<set<T>, int>& outCondPattern);
 	void _mineTree(TreeNode<T>* inTree, map<T, pair<int, TreeNode<T>*> >& headerTable, 
 			const set<T>& prefix, vector<set<T> >& freqItemSetsList);
 	void _collect(TreeNode<T>* root);
@@ -68,8 +69,6 @@ FpGrowth<T>::FpGrowth(int minSuppCnt, const set<set<T>>& dataSet) {
 	this->minSuppCnt = minSuppCnt;
 	this->dataSet = dataSet;
 }
-
-
 
 template<class T>
 void FpGrowth<T>::freqSetsMining(vector<set<T>>& freqSetsList) {
@@ -188,7 +187,7 @@ TreeNode<T>* FpGrowth<T>::_createTree(map<set<T>, int>& dataMap, map<T, pair<int
 }
 
 template<class T>
-void FpGrowth<T>::_updateTree(const vector<T>& items, const int & itemsStartIndex, TreeNode<T>*& root, map<T, pair<int, TreeNode<T>*>>& headerTable, const int & transCnt) {
+void FpGrowth<T>::_updateTree(const vector<T>& items, const int & itemsStartIndex, TreeNode<T>* root, map<T, pair<int, TreeNode<T>*>>& headerTable, const int & transCnt) {
 	T curItem = items[itemsStartIndex];
 	auto findRes = (root->children).find(curItem);
 	if (findRes != (root->children).end()) { // in it
@@ -215,15 +214,16 @@ void FpGrowth<T>::_updateTree(const vector<T>& items, const int & itemsStartInde
 }
 
 template<class T>
-void FpGrowth<T>::_ascendTree(const TreeNode<T>* leafNode, vector<T>& prefixPath) {
-	if (NULL != leafNode->parent) {
-		prefixPath.push_back(leafNode->value);
-		_ascendTree(leafNode->parent, prefixPath);
+void FpGrowth<T>::_ascendTree(TreeNode<T>* leafNode, vector<T>& prefixPath) {
+	TreeNode<T>* cur = leafNode;
+	while (cur->parent != NULL){
+		prefixPath.push_back(cur->value);
+		cur = cur->parent;
 	}
 }
 
 template<class T>
-void FpGrowth<T>::_findPrefixPath(const T & basePattern, const TreeNode<T>* inTreeNode, map<set<T>, int>& outCondPattern) {
+void FpGrowth<T>::_findPrefixPath(const T & basePattern, TreeNode<T>* inTreeNode, map<set<T>, int>& outCondPattern) {
 	while (inTreeNode != NULL) {
 		vector<T> prefixPath;
 		_ascendTree(inTreeNode, prefixPath);
@@ -246,7 +246,6 @@ void FpGrowth<T>::_mineTree(TreeNode<T>* inTree, map<T, pair<int, TreeNode<T>*>>
 	std::sort(bigl.begin(), bigl.end(), [&headerTable](const T& x, const T& y)->bool {
 		return (headerTable[x].first < headerTable[y].first);
 	});
-
 	for (auto basePattern : bigl) {
 		set<T> newFreqSet = prefix;
 		newFreqSet.insert(basePattern);

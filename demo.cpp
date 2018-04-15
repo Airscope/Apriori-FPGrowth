@@ -203,6 +203,7 @@ void fpGrowthTest() {
 	// ------------------------------------
 	// 5.Print results
 	cout << ">>> fp-growth" << endl;
+	//printResults<int>(dataSet, MIN_SUPP_COUNT, freqSets);
 	printResults<int>(dataSet, (float)MIN_SUPP_COUNT / dataSet.size(), 0.5f, freqSetsList, suppData, brl);
 
 }
